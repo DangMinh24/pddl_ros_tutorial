@@ -16,7 +16,13 @@ require_def: "(" ":requirements" REQUIRE_KEY+ ")"
 
 types_def: "(" ":types" typed_name_list ")"
 
-typed_name_list: NAME+
+typed_name_list: (NAME* | single_type_name_list+ NAME* )
+
+single_type_name_list: (NAME+ "-" type)
+
+type: prim_type
+
+prim_type: NAME
 
 functions_def: "(" ":functions" function_list ")"
 
@@ -169,7 +175,7 @@ f_exp_da: "(" (( binary_op f_exp_da f_exp_da ) | ("-" f_exp_da)) ")"
 
 problem: "(" "define" problem_decl problem_domain require_def? object_decl? init goal prob_constraints? metric_spec? ")"
 
-problem_decl: "(" ":domain" NAME ")"
+problem_decl: "(" "problem" NAME ")"
 
 problem_domain: "(" ":domain" NAME ")"
 
@@ -252,14 +258,13 @@ binary_op: "*"
 
 
    
-NAME: LETTER+
-VARIABLE: "?" LETTER CNAME*
+NAME: LETTER+ ("_"|"-"|LETTER|DIGIT)*
+VARIABLE: "?" LETTER ("_"|"-"|LETTER|DIGIT)*
 
 %import common.LETTER
+%import common.DIGIT
 %import common.CNAME
 %import common.NUMBER
 %import common.WS
 %ignore WS
 """
-
-parser = Lark(pddl_grammar_str, start="pddl_doc")
