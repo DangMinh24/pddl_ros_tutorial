@@ -36,13 +36,15 @@ function_type: "number"
 
 constants_def: "(" ":constants" typed_name_list ")"
 
-predicates_def: "(" ":predicates" atomic_formula_skeleton ")"
+predicates_def: "(" ":predicates" atomic_formula_skeleton+ ")"
 
 atomic_formula_skeleton: "(" predicate typed_variable_list ")"
 
 predicate: NAME
 
-typed_variable_list: VARIABLE+
+typed_variable_list: (VARIABLE* |single_type_var_list+ VARIABLE*)
+
+single_type_var_list: (VARIABLE+ "-" type )
 
 constraints: "(" ":constraints"  con_gd ")"
 
@@ -115,7 +117,7 @@ f_head: "(" function_symbol term* ")"
     | function_symbol
 
 
-effect: "(" "and" c_effect ")"
+effect: "(" "and" c_effect* ")"
     | c_effect
 
 c_effect: "(" "forall" "(" typed_variable_list ")" effect ")"
@@ -127,7 +129,7 @@ p_effect: "(" assign_op f_head f_exp ")"
     | atomic_term_formula
 
 
-cond_effect: "(" "and" p_effect ")"
+cond_effect: "(" "and" p_effect* ")"
     | p_effect
 
 

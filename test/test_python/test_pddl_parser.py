@@ -98,6 +98,53 @@ class Test_PDDL_Parser(unittest.TestCase):
                         (assemble-order hoozawhatsie unit socket))
                 (:goal (complete bracket))
                 )            
+            """,
+            """
+                (define (domain domain_name)
+
+
+                (:requirements :strips :typing :conditional-effects )
+
+                (:types 
+                    vehicle - physobj
+                    truck   - vehicle
+                    location    -   object
+                    city        -   location
+                )
+
+
+
+                (:predicates 
+                    (at ?x - object ?loc - location)
+                    (in-city ?loc - location ?city - city)
+                    (in ?x - object ?truck - truck)
+
+                )
+
+
+
+                (:action drive-truck
+                    :parameters (?truck - truck ?loc-from - location ?loc-to - location ?city - city)
+                    :precondition (and 
+                                    (at ?truck ?loc-from)
+                                    (in-city ?loc-from ?city)
+                                    (in-city ?loc-to ?city)
+                                )
+                    :effect (and 
+                        (at ?truck ?loc-to)
+                        (not (at ?truck ?loc-from))
+                        (forall (?x - obj)
+                            (when (and (in ?x ?truck)) 
+
+                                (and (not (at ?x ?loc-from))
+                                     (at ?x ?loc-to)
+                                )
+                            )
+                        )
+                    )
+                )
+
+                )            
             """
         ]
         parser = Lark(pddl_grammar_str, start="pddl_doc")
