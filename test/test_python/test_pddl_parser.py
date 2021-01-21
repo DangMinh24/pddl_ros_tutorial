@@ -4,7 +4,7 @@ from pathlib import Path
 workspace_directory = Path(Path(__file__).parent.parent.parent)
 sys.path.insert(0, str(workspace_directory))
 
-from scripts.pddl_parser.parser import (
+from scripts.pddl_parser.pddl_parser import (
     pddl_grammar_str
 )
 from lark import Lark
