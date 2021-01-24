@@ -162,5 +162,3 @@ VARIABLE: "?" LETTER ("_"|"-"|LETTER|DIGIT)*
 %import common.WS
 %ignore WS
 """
-
-parser = Lark(hddl_grammar_str, start="hddl_file")
