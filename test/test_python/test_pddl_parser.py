@@ -1,4 +1,4 @@
-import unittest
+import unittest2 as unittest
 import sys
 from pathlib import Path
 workspace_directory = Path(Path(__file__).parent.parent.parent)
@@ -10,7 +10,31 @@ from scripts.pddl_parser.pddl_parser import (
 from lark import Lark
 
 
+class Test_PDDL_Components_Parsing(unittest.TestCase):
+    def test_parse_action(self):
+        inputs_ = [
+            """
+                (:action pick
+                :parameters (?obj ?room ?gripper)
+                :precondition  (and  (ball ?obj) (room ?room) (gripper ?gripper)
+                        (at ?obj ?room) (at-robby ?room) (free ?gripper))
+                :effect (and (carry ?obj ?gripper)
+                    (not (at ?obj ?room)) 
+                    (not (free ?gripper))))
+            """
+        ]
+        parser = Lark(pddl_grammar_str, start="structure_def")
+        for i, input_ in enumerate(inputs_):
+            try:
+                result = parser.parse(input_)
+            except:
+                error_msg = "Description {}-th is not a valid description: \n{}".format(
+                    i, input_)
+                self.fail(error_msg)
+
+
 class Test_PDDL_Parser(unittest.TestCase):
+    # @unittest.skip("")
     def test_parser(self):
         inputs_ = [
             """
@@ -137,7 +161,7 @@ class Test_PDDL_Parser(unittest.TestCase):
                             (when (and (in ?x ?truck)) 
 
                                 (and (not (at ?x ?loc-from))
-                                     (at ?x ?loc-to)
+                                        (at ?x ?loc-to)
                                 )
                             )
                         )
@@ -145,14 +169,52 @@ class Test_PDDL_Parser(unittest.TestCase):
                 )
 
                 )            
+                """,
             """
+                (define (domain gripper-strips)
+                    (:predicates (room ?r)
+                    (ball ?b)
+                    (gripper ?g)
+                    (at-robby ?r)
+                    (at ?b ?r)
+                    (free ?g)
+                    (carry ?o ?g))
+
+                    (:action move
+                    :parameters  (?from ?to)
+                    :precondition (and  (room ?from) (room ?to) (at-robby ?from))
+                    :effect (and  (at-robby ?to)
+                        (not (at-robby ?from))))
+
+
+
+                    (:action pick
+                    :parameters (?obj ?room ?gripper)
+                    :precondition  (and  (ball ?obj) (room ?room) (gripper ?gripper)
+                            (at ?obj ?room) (at-robby ?room) (free ?gripper))
+                    :effect (and (carry ?obj ?gripper)
+                        (not (at ?obj ?room)) 
+                        (not (free ?gripper))))
+
+
+                    (:action drop
+                    :parameters  (?obj  ?room ?gripper)
+                    :precondition  (and  (ball ?obj) (room ?room) (gripper ?gripper)
+                            (carry ?obj ?gripper) (at-robby ?room))
+                    :effect (and (at ?obj ?room)
+                        (free ?gripper)
+                        (not (carry ?obj ?gripper)))))
+                """
         ]
         parser = Lark(pddl_grammar_str, start="pddl_doc")
 
         for i, input_ in enumerate(inputs_):
-            result = parser.parse(input_)
-
-            print(result)
+            try:
+                result = parser.parse(input_)
+            except:
+                error_msg = "Description {}-th is not a valid description: \n{}".format(
+                    i, input_)
+                self.fail(error_msg)
 
 
 if __name__ == '__main__':

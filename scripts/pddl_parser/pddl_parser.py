@@ -8,7 +8,7 @@ from lark import Lark
 pddl_grammar_str = """
 pddl_doc : domain 
     | problem
-domain: "(" "define" domain_name require_def? types_def? constants_def? predicates_def? functions_def? constraints? structure_def? ")"
+domain: "(" "define" domain_name require_def? types_def? constants_def? predicates_def? functions_def? constraints? structure_def* ")"
 
 domain_name: "(" "domain" NAME ")"
 
