@@ -1,7 +1,8 @@
 from lark import (
     Lark,
     Token,
-    Tree
+    Tree,
+    Visitor
 )
 
 from pddl_parser.pddl_parser import (
@@ -9,20 +10,47 @@ from pddl_parser.pddl_parser import (
 )
 
 
+def get_atomic_name_formula(state):
+    if (isinstance(state, Token)):
+        return []
+    if (isinstance(state, Tree) and (state.data == "predicate" or state.data == "predicate_argument")):
+        return [state]
+    elif (isinstance(state, Tree)):
+        children = []
+
+        for child in state.children:
+            child_result = get_atomic_name_formula(child)
+            if (isinstance(child_result, list) and child_result != []):
+                children.append(child_result)
+
+        if (state.data == "atomic_name_formula"):
+            new_children = []
+            first_child = children[0][0]
+            predicate = "".join(get_leaves(first_child))
+            arguments = []
+            for child_element in children[1:]:
+                child_result = child_element[0]
+                child_result_str = "".join(get_leaves(child_result))
+                arguments.append(child_result_str)
+            new_children.append((predicate, arguments))
+            return new_children
+        else:
+            return children
+
+
 def get_init(state):
     if (isinstance(state, Token)):
         return []
     elif (isinstance(state, Tree) and state.data == "init"):
-        print(state.data)
         return [state]
 
-    elif (isinstance(state, Tree)):
+    if (isinstance(state, Tree)):
         children = []
         for child in state.children:
             child_result = get_init(child)
             if (isinstance(child_result, list)):
                 children.extend(child_result)
-        return child_result
+        return children
 
 
 def get_list_of_objects_str(state):
@@ -78,6 +106,58 @@ def get_leaves(state):
                 children.append(child_result)
 
         return children
+
+
+def preprocessing_predicate_header(predicate_header):
+    result_predicate_header = predicate_header.replace("-", "_")
+    result_predicate_header = result_predicate_header[0].capitalize(
+    ) + result_predicate_header[1:]
+    return result_predicate_header
+
+
+def create_expression(predicate, arguments):
+    expression = ""
+    expression += predicate
+    expression += "("
+    expression += arguments[0]
+    if len(arguments) > 1:
+        for argument in arguments[1:]:
+            expression += ", {}".format(argument)
+
+    expression += ")"
+
+    return expression
+
+
+class GetFormulas(Visitor):
+    def __init__(self):
+        self._formulas = []
+        self._atomic_name_formula = []
+        self._predicate_arguments = []
+        self._predicate_header = []
+
+    def predicate_argument(self, tree):
+        data = "".join(get_leaves(tree))
+        tree._shared_data = data
+        self._predicate_arguments.append(data)
+
+    def predicate(self, tree):
+        data = "".join(get_leaves(tree))
+        data = preprocessing_predicate_header(data)
+        tree._shared_data = data
+        self._predicate_header.append(data)
+
+    def atomic_name_formula(self, tree):
+        children = []
+        for child in tree.children:
+            child_result = child._shared_data
+            children.append(child_result)
+
+        predicate_header = children[0]
+        arguments = children[1:]
+
+        expression = create_expression(predicate_header, arguments)
+        self._formulas.append(expression)
 
 
 if __name__ == "__main__":
@@ -146,18 +226,8 @@ if __name__ == "__main__":
 
     result = parser.parse(input_)
 
-    leaves = get_leaves(result)
-    # print(leaves)
+    visitor = GetFormulas()
+    visitor.visit(result)
 
-    objects = get_objects(result)
-    # print(objects)
-
-    NAMES = get_list_of_objects_str(result)
-    domain = set(NAMES)
-    print (domain)
-
-    actions = []
-    state = []
-
-    init_state = get_init(result)
-    print(len(init_state))
+    init_state = visitor._formulas
+    print(init_state)
