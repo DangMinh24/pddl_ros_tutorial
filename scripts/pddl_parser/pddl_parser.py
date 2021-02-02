@@ -193,7 +193,9 @@ name_literal: atomic_name_formula
     | "(" "not" atomic_name_formula ")"
 
 
-atomic_name_formula: "(" predicate NAME* ")"
+atomic_name_formula: "(" predicate predicate_argument* ")"
+
+predicate_argument: NAME
 
 goal: "(" ":goal" goal_desc ")"
 
